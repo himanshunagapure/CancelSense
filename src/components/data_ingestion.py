@@ -1,3 +1,10 @@
+'''
+Purpose:
+We read data from any source (like manual, mongodb, api etc.) 
+and with that data we did train-test split
+and we saved this raw file, train file, and test file inside artifact folder
+'''
+
 import os
 import sys
 from pathlib import Path
@@ -10,7 +17,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from dataclasses import dataclass
 
-#from src.components.data_transformation import DataTransformation
+from data_transformation import DataTransformation
 #from src.components.data_transformation import DataTransformationConfig
 
 #from src.components.model_trainer import ModelTrainerConfig
@@ -30,7 +37,7 @@ class DataIngestion:
         try:
             #Collecting data
             #To make code platform-independent and avoid issues, we use Python's os.path to construct file paths dynamically.
-            data_path = os.path.join('notebook','data','hotel_bookings.csv')
+            data_path = os.path.join('notebook','data','hotel_booking_cleaned.csv')
             df = pd.read_csv(data_path)
             logging.info('Read the dataset as dataframe')
 
@@ -54,13 +61,21 @@ class DataIngestion:
             )
         except Exception as e:
             raise CustomException(e,sys)
-        
+
+       
+'''
+#For testing 
 if __name__=="__main__":
     obj=DataIngestion()
-    obj.initiate_data_ingestion()
-
-    #data_transformation=DataTransformation()
-    #train_arr,test_arr,_=data_transformation.initiate_data_transformation(train_data,test_data)
+    train_data_p, test_data_p = obj.initiate_data_ingestion()
+     
+    data_transformation = DataTransformation()
+    target_column = "is_canceled"
+    train_arr,test_arr, f_path = data_transformation.initiate_data_transformation(train_data_p,test_data_p,target_column)
 
     #modeltrainer=ModelTrainer()
     #print(modeltrainer.initiate_model_trainer(train_arr,test_arr))
+'''
+
+
+ 
