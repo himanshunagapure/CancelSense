@@ -136,25 +136,3 @@ class DataTransformation:
         except Exception as e:
             raise CustomException(e, sys)
 
-# Example usage
-''' 
-if __name__ == "__main__":
-    try:
-        # Dummy code for demonstration
-        # Replace 'train.csv', 'test.csv', and 'is_canceled' with actual data and column names
-        train_path = "train.csv"
-        test_path = "test.csv"
-        target_column = "is_canceled"
-
-        feature_selector = DataTransformation()
-        train_arr, test_arr, preprocessor_path = feature_selector.initiate_feature_selection(
-            train_path, test_path, target_column
-        )
-        logging.info(f"Train array shape: {train_arr.shape}")
-        logging.info(f"Test array shape: {test_arr.shape}")
-        logging.info(f"Scaler saved at: {preprocessor_path}")
-        logging.info("Feature selection process completed successfully.")
-
-    except Exception as e:
-        logging.error(f"An error occurred during feature selection: {e}")
-'''

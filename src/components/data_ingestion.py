@@ -18,10 +18,8 @@ from sklearn.model_selection import train_test_split
 from dataclasses import dataclass
 
 from data_transformation import DataTransformation
-#from src.components.data_transformation import DataTransformationConfig
+from model_trainer import ModelTrainer
 
-#from src.components.model_trainer import ModelTrainerConfig
-#from src.components.model_trainer import ModelTrainer
 @dataclass
 class DataIngestionConfig:
     train_data_path: str = os.path.join('artifacts',"train.csv")
@@ -46,9 +44,11 @@ class DataIngestion:
             
             #Store the raw data at ra_data_path before train-test split    
             df.to_csv(self.ingestion_config.raw_data_path,index=False,header=True)
+            #Imported Data already is converted to numerical values 
+            # print(df.dtypes)
 
             logging.info("Train test split initiated")
-            train_set,test_set=train_test_split(df,test_size=0.2,random_state=42)
+            train_set,test_set = train_test_split(df,test_size=0.2,random_state=42)
 
             train_set.to_csv(self.ingestion_config.train_data_path,index=False,header=True)
             test_set.to_csv(self.ingestion_config.test_data_path,index=False,header=True)
@@ -63,7 +63,6 @@ class DataIngestion:
             raise CustomException(e,sys)
 
        
-'''
 #For testing 
 if __name__=="__main__":
     obj=DataIngestion()
@@ -71,11 +70,11 @@ if __name__=="__main__":
      
     data_transformation = DataTransformation()
     target_column = "is_canceled"
-    train_arr,test_arr, f_path = data_transformation.initiate_data_transformation(train_data_p,test_data_p,target_column)
+    train_arr,test_arr,_ = data_transformation.initiate_data_transformation(train_data_p,test_data_p,target_column)
+    
+    modeltrainer = ModelTrainer()
+    print(modeltrainer.initiate_model_trainer(train_arr,test_arr))
 
-    #modeltrainer=ModelTrainer()
-    #print(modeltrainer.initiate_model_trainer(train_arr,test_arr))
-'''
 
 
  
