@@ -12,7 +12,7 @@ import lightgbm as lgb
 
 from exception import CustomException
 from logger import logging
-from utils import save_object, evaluate_models
+from utils import save_object, evaluate_models, tune_model_hyperparameters
 
 import os
 import sys
@@ -35,78 +35,100 @@ class ModelTrainer:
                 test_arr[:,:-1],
                 test_arr[:,-1]
             )
+            # Models that require feature scaling
+            models_requiring_scaling = [
+                ('Logistic Regression', LogisticRegression(max_iter=1000)),
+                ('XGB Classifier (scaled)', XGBClassifier())
+            ]
+            # Models that do not require feature scaling
+            models_not_requiring_scaling = [
+                ('Random Forest Classifier', RandomForestClassifier(n_estimators=100)),
+                ('Decision Tree Classifier', DecisionTreeClassifier()),
+                ('XGB Classifier (no scaling)', XGBClassifier()),
+                ('LGB Classifier', lgb.LGBMClassifier())
+            ]
             
-            logging.info("Scaling the features if required")
+            logging.info("Scaling the features for models that require it")
             scaler = StandardScaler()
             X_train_scaled = scaler.fit_transform(X_train)
             X_test_scaled = scaler.transform(X_test)
             
-            models_requiring_scaling = [
-                ('Logistic Regression', LogisticRegression(max_iter=1000)),
-                ('XGB Classifier', XGBClassifier())
-            ]
-
-            models_not_requiring_scaling = [
-                ('Random Forest Classifier', RandomForestClassifier(n_estimators=100)),
-                ('Decision Tree Classifier', DecisionTreeClassifier()),
-                ('XGB Classifier', XGBClassifier()),
-                ('LGB Classifier', lgb.LGBMClassifier())
-            ]
-            
             # Evaluate models requiring scaling
             logging.info("Evaluating models requiring scaling")
             results_requiring_scaling = evaluate_models(X_train_scaled, y_train, X_test_scaled, y_test, models_requiring_scaling)
-            
-            # Evaluate models without scaling
+
+            # Evaluate models not requiring scaling
             logging.info("Evaluating models not requiring scaling")
             results_no_scaling = evaluate_models(X_train, y_train, X_test, y_test, models_not_requiring_scaling)
 
-            # Combine results from both lists
-            results = results_requiring_scaling + results_no_scaling
+            # Combine results
+            all_results = results_requiring_scaling + results_no_scaling
 
-            # Create a DataFrame from results
-            results_df = pd.DataFrame(results)
-            logging.info(f"Model evaluation results: \n{results_df}")
+            # Filter models with accuracy >= 86%
+            top_models = [result for result in all_results if result['accuracy'] >= 0.86]
+            logging.info(f"Top-performing models (>= 86% accuracy): {top_models}")
             
-            best_model_name = results_df.loc[results_df['Model Accuracy'].idxmax(), 'Model Name']
-            best_model_accuracy = results_df['Model Accuracy'].max()
-
-            logging.info(f"Best model: {best_model_name} with accuracy: {best_model_accuracy}")
-
-            ''' 
-            # Dictionary to map model names to their corresponding classes
-            model_dict = {
-                'Logistic Regression': LogisticRegression(max_iter=1000),
-                'XGB Classifier': XGBClassifier(),
-                'Random Forest Classifier': RandomForestClassifier(),
-                'Decision Tree Classifier': DecisionTreeClassifier(),
-                'LGB Classifier': lgb.LGBMClassifier()
+            # Hyperparameters for models
+            params = {
+                "Logistic Regression": {"C": [0.1, 1, 10], "solver": ["lbfgs", "liblinear"]},
+                "XGB Classifier (scaled)": {"learning_rate": [0.01, 0.1, 0.2], "n_estimators": [50, 100, 200]},
+                "Random Forest Classifier": {"n_estimators": [50, 100, 200], "max_depth": [None, 10, 20]},
+                "Decision Tree Classifier": {"criterion": ["gini", "entropy"], "max_depth": [None, 10, 20]},
+                "XGB Classifier (no scaling)": {"learning_rate": [0.01, 0.1, 0.2], "n_estimators": [50, 100, 200]},
+                "LGB Classifier": {"num_leaves": [31, 50, 100], "learning_rate": [0.01, 0.1, 0.2], "n_estimators": [50, 100, 200]},
             }
+            # Extract model names for easier checking
+            models_requiring_scaling_names = [model[0] for model in models_requiring_scaling]
+            models_not_requiring_scaling_names = [model[0] for model in models_not_requiring_scaling]
+            
+            # Variable to store details of the best model after tuning
+            best_model_details = {
+                "model_name": None,
+                "best_params": None,
+                "model_object": None,
+                "accuracy": 0
+            }
+            
+            # Tune top models only
+            for top_model in top_models:
+                model_name = top_model['model']
+                logging.info(f"Tuning hyperparameters for: {model_name}")
+                
+                # Check if the model requires scaling
+                if model_name in models_requiring_scaling_names:
+                    logging.info(f"Using scaled data for tuning {model_name}")
+                    X_train_used, y_train_used, X_test_used = X_train_scaled, y_train, X_test_scaled
+                elif model_name in models_not_requiring_scaling_names:
+                    logging.info(f"Using non-scaled data for tuning {model_name}")
+                    X_train_used, y_train_used, X_test_used = X_train, y_train, X_test
+                else:
+                    logging.warning(f"Unknown model scaling requirement for: {model_name}. Skipping tuning.")
+                    continue  # Skip tuning if the model's scaling requirement is unknown
 
-            # Get the best model from the dictionary
-            best_model = model_dict.get(best_model_name)
+                # Tune hyperparameters if grid is defined
+                if model_name in params:
+                    tuned_model = tune_model_hyperparameters(top_model['model_object'], params[model_name], X_train_used, y_train_used)
+                    y_test_pred = tuned_model.predict(X_test_used)
+                    accuracy = accuracy_score(y_test, y_test_pred)
 
+                    logging.info(f"Tuned model: {model_name}, Accuracy: {accuracy}, Params: {tuned_model.get_params()}")
+
+                    # Update best model details if current model has higher accuracy
+                    if accuracy > best_model_details["accuracy"]:
+                        best_model_details.update({
+                            "model_name": model_name,
+                            "best_params": tuned_model.get_params(),
+                            "model_object": tuned_model,
+                            "accuracy": accuracy
+                        })
+                else:
+                    logging.warning(f"No hyperparameter grid defined for: {model_name}")
+        
             # Save the best model
-            if best_model:
-                # Train the best model before saving, as untrained models won’t have the necessary attributes
-                logging.info(f"Training the best model before saving: {best_model_name}")
-                # Train the best model with the appropriate data
-                if best_model_name in ['Logistic Regression', 'XGB Classifier']:  # models requiring scaling
-                    best_model.fit(X_train_scaled, y_train)
-                else:  # models not requiring scaling
-                    best_model.fit(X_train, y_train)
-                save_object(
-                    file_path=self.model_trainer_config.trained_model_file_path, 
-                    obj=best_model
-                )
-            else:
-                logging.error(f"Model {best_model_name} not found in the dictionary")
-            '''
-            save_object(
-                    file_path=self.model_trainer_config.trained_model_file_path, 
-                    obj=best_model_name
-                )            
-            return best_model_accuracy
+            logging.info(f"Saving the best model {best_model_details}")
+            save_object(self.model_trainer_config.trained_model_file_path, best_model_details)      
+            
+            return best_model_details
             
         except Exception as e:
             raise CustomException(e,sys)
