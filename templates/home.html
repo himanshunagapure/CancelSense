@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Booking Input Form</title>
+</head>
+<body>
+    <h1>Hotel Booking Input Form</h1>
+    <form action="{{ url_for('predict_datapoint')}}" method="POST">
+        <!-- Dropdowns -->
+        <label for="hotel">Hotel:</label>
+        <select id="hotel" name="hotel">
+            <option value="City Hotel">City Hotel</option>
+            <option value="Resort Hotel">Resort Hotel</option>
+        </select><br><br>
+
+        <label for="arrival_date_month">Arrival Date Month:</label>
+        <select id="arrival_date_month" name="arrival_date_month">
+            <option value="January">January</option>
+            <option value="February">February</option>
+            <option value="March">March</option>
+            <option value="April">April</option>
+            <option value="May">May</option>
+            <option value="June">June</option>
+            <option value="July">July</option>
+            <option value="August">August</option>
+            <option value="September">September</option>
+            <option value="October">October</option>
+            <option value="November">November</option>
+            <option value="December">December</option>
+        </select><br><br>
+
+        <label for="market_segment">Market Segment:</label>
+        <select id="market_segment" name="market_segment">
+            <option value="None">None</option>
+            <option value="Aviation">Aviation</option>
+            <option value="Complementary">Complementary</option>
+            <option value="Corporate">Corporate</option>
+            <option value="Direct">Direct</option>
+            <option value="Groups">Groups</option>
+            <option value="Online TA">Online TA</option>
+            <option value="Offline TA/TO">Offline TA/TO</option>
+        </select><br><br>
+
+        <label for="customer_type">Customer Type:</label>
+        <select id="customer_type" name="customer_type">
+            <option value="Contract">Contract</option>
+            <option value="Transient">Transient</option>
+            <option value="Group">Group</option>
+            <option value="Transient-Party">Transient-Party</option>
+        </select><br><br>
+
+        <label for="country">Country:</label>
+        <select id="country" name="country">
+            <!-- Use JavaScript to populate these options dynamically if the list is long -->
+            <option value="PRT">Portugal (PRT)</option>
+            <option value="GBR">United Kingdom (GBR)</option>
+            <!-- Add other countries here -->
+        </select><br><br>
+
+        <!-- Binary fields -->
+        <label for="is_repeated_guest">Repeated Guest?</label>
+        <select id="is_repeated_guest" name="is_repeated_guest">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+        </select><br><br>
+
+        <label for="is_family">Family?</label>
+        <select id="is_family" name="is_family">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+        </select><br><br>
+
+        <label for="is_deposit_given">Is Deposit Given:</label>
+        <select id="is_deposit_given" name="is_deposit_given">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+        </select><br><br>
+
+        <label for="is_room_upgraded">Is Room Upgraded:</label>
+        <select id="is_room_upgraded" name="is_room_upgraded">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+        </select><br><br>
+
+        <!-- Numeric fields -->
+        <label for="lead_time">Lead Time (days):</label>
+        <input type="number" id="lead_time" name="lead_time"><br><br>
+
+        <label for="previous_cancellations">Previous Booking Cancellations:</label>
+        <input type="number" id="previous_cancellations" name="previous_cancellations"><br><br>
+
+        <label for="previous_bookings_not_canceled">Previous Bookings Not Canceled:</label>
+        <input type="number" id="previous_bookings_not_canceled" name="previous_bookings_not_canceled"><br><br>
+
+        <label for="booking_changes">Booking Changes:</label>
+        <input type="number" id="booking_changes" name="booking_changes"><br><br>
+
+        <label for="days_in_waiting_list">Days in Waiting List:</label>
+        <input type="number" id="days_in_waiting_list" name="days_in_waiting_list"><br><br>
+
+        <label for="adr">ADR (Average Daily Rate):</label>
+        <input type="number" step="0.01" id="adr" name="adr"><br><br>
+
+        <label for="required_car_parking_spaces">Required Car Parking Spaces:</label>
+        <input type="number" id="required_car_parking_spaces" name="required_car_parking_spaces"><br><br>
+
+        <label for="total_of_special_requests">Total of Special Requests:</label>
+        <input type="number" id="total_of_special_requests" name="total_of_special_requests"><br><br>
+
+        <label for="total_guests">Total Guests:</label>
+        <input type="number" id="total_guests" name="total_guests"><br><br>
+
+        <label for="total_stay_length">Total Stay Length (days):</label>
+        <input type="number" id="total_stay_length" name="total_stay_length"><br><br>
+
+        <!-- Submit button -->
+        <button type="submit">Submit</button>
+    </form>
+    <h1>
+        <legend>Hotel Booking Cancellation Prediction : </legend>
+    </h1>
+    <h2>
+        THE  prediction is {{results}}
+     </h2>
+</body>
+</html>

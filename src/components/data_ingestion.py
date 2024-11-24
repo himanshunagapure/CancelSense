@@ -35,7 +35,7 @@ class DataIngestion:
         try:
             #Collecting data
             #To make code platform-independent and avoid issues, we use Python's os.path to construct file paths dynamically.
-            data_path = os.path.join('notebook','data','hotel_booking_cleaned.csv')
+            data_path = os.path.join('notebook','data','hotel_booking_cleaned1.csv')
             df = pd.read_csv(data_path)
             logging.info('Read the dataset as dataframe')
 
@@ -69,8 +69,7 @@ if __name__=="__main__":
     train_data_p, test_data_p = obj.initiate_data_ingestion()
      
     data_transformation = DataTransformation()
-    target_column = "is_canceled"
-    train_arr,test_arr,_ = data_transformation.initiate_data_transformation(train_data_p,test_data_p,target_column)
+    train_arr,test_arr,_ = data_transformation.initiate_data_transformation(train_data_p,test_data_p)
     
     modeltrainer = ModelTrainer()
     print(modeltrainer.initiate_model_trainer(train_arr,test_arr))

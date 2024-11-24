@@ -7,8 +7,14 @@ import pandas as pd
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import GridSearchCV
 
-from logger import logging
-from exception import CustomException
+from src.logger import logging
+from src.exception import CustomException
+
+"""# Dynamically add 'src' to the Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+src_path = os.path.join(current_dir, "src")
+if src_path not in sys.path:
+    sys.path.append(src_path)"""
 
 def save_object(file_path, obj):
     """
@@ -88,3 +94,14 @@ def tune_model_hyperparameters(model, param_grid, X_train, y_train):
     logging.info(f"Best score for {model.__class__.__name__}: {grid_search.best_score_}")
 
     return grid_search.best_estimator_
+
+def load_object(file_path):
+    try:
+        with open(file_path, "rb") as file_obj:
+            return dill.load(file_obj)
+    except ModuleNotFoundError as e:
+        logging.error(f"Module not found: {e}. Check if all dependencies are installed and modules are available.")
+        raise CustomException(f"Error loading object. Module not found: {e}", sys)
+    except Exception as e:
+        raise CustomException(e, sys)
+        
